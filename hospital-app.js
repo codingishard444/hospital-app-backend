@@ -83,7 +83,7 @@ app.post('/addList', (req, res) => {
   const waitTime = 0
   const formattedWaitTime = formatTime(waitTime)
   const Doctor = ''
-  if (!patientName || !triageLevel) {
+  if (!patientName || !triageLevel || !injuryType) {
     return res.status(400).send({ message: 'All fields are required.' })
   }
 
