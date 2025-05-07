@@ -1,6 +1,7 @@
 const express = require('express')
 const app = express()
 const port = 8080
+const http = require('http')
 app.use(express.json())
 const server = http.createServer(app);
 
@@ -50,9 +51,8 @@ app.put('/updateListById/:id', (req, res) => {
     }
   
     HospitalInfoList[patientIndex] = updatedPatient
-    io.emit('update', [...HospitalInfoList]);
     res.send(updatedPatient)
-})
+  })
   
 app.delete('/deleteListById/:id', (req, res) => {
     const id = parseInt(req.params.id)
@@ -62,10 +62,9 @@ app.delete('/deleteListById/:id', (req, res) => {
     if (HospitalInfoList.length === initialLength) {
       return res.status(404).send({ message: 'Patient not found.' })
     }
-    io.emit('update', [...HospitalInfoList]);
     res.send({ message: 'Patient deleted.' })
 })
   
-app.listen(port, () => {
+server.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`)
 })
