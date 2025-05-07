@@ -8,7 +8,7 @@ const port = 8080
 
 app.use(cors({
   origin: ['http://localhost:8080','https://clever-preferably-bird.ngrok-free.app','https://hospital-app-alpha.vercel.app'],
-  methods: ['GET', 'POST', 'DELETE'],
+  methods: ['GET', 'POST', 'DELETE','PUT'],
 }));
 
 
@@ -21,7 +21,7 @@ const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
     origin: ['http://localhost:8080','https://clever-preferably-bird.ngrok-free.app','https://hospital-app-alpha.vercel.app'],
-    methods: ['GET', 'POST', 'DELETE'],
+    methods: ['GET', 'POST', 'DELETE','PUT'],
   },
 });
 let HospitalHistory = [] 
