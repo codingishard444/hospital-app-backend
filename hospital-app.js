@@ -6,7 +6,7 @@ const { Server } = require('socket.io');
 const port = 8080
 
 app.use(cors({
-  origin: ['https://clever-preferably-bird.ngrok-free.app','https://hospital-app-ashy.vercel.app'],
+  origin: ['http://localhost:8080','https://clever-preferably-bird.ngrok-free.app','https://hospital-app-alpha.vercel.app'],
   methods: ['GET', 'POST', 'DELETE'],
 }));
 
@@ -19,11 +19,12 @@ const server = http.createServer(app);
 // Attach Socket.IO to the HTTP server
 const io = new Server(server, {
   cors: {
-    origin: ['https://clever-preferably-bird.ngrok-free.app','https://hospital-app-ashy.vercel.app'],
+    origin: ['http://localhost:8080','https://clever-preferably-bird.ngrok-free.app','https://hospital-app-alpha.vercel.app'],
     methods: ['GET', 'POST', 'DELETE'],
   },
 });
-
+let HospitalHistory = [] 
+let historyId = 1
 let HospitalInfoList = []
 let nextId = 1 
 
@@ -31,16 +32,28 @@ io.on('connection', (socket) => {
   console.log('Client connected:', socket.id);
 
   // Send current patient list immediately
-  socket.emit('update', HospitalInfoList);
+  socket.emit('update', {
+    list:[...HospitalInfoList],
+    history:[...HospitalHistory]
+});
 
   socket.on('disconnect', () => {
     console.log('Client disconnected:', socket.id);
   });
 });
 
+function formatTime(seconds) {
+    const hrs = String(Math.floor(seconds / 3600)).padStart(2, '0');
+    const mins = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0');
+    const secs = String(seconds % 60).padStart(2, '0');
+    return `${hrs}:${mins}:${secs}`;
+}
+
 setInterval(() => {
   HospitalInfoList.forEach((patient) => {
     patient.waitTime += 1
+
+    patient.formattedWaitTime = formatTime(patient.waitTime);
 
     if (patient.waitTime % 60 === 0) {
       const currentLevel = parseInt(patient.triageLevel)
@@ -52,24 +65,34 @@ setInterval(() => {
     //   `Patient ${patient.id}: waitTime=${patient.waitTime}, triageLevel=${patient.triageLevel}`
     // )
   })
+  if (HospitalInfoList.length > 1) {
   HospitalInfoList.sort((a, b) => {
     return parseInt(a.triageLevel) - parseInt(b.triageLevel);
   });
-  io.emit('update', [...HospitalInfoList]);
+  }
+  io.emit('update', {
+    list:[...HospitalInfoList],
+    history:[...HospitalHistory]
+  });
 }, 1000)
 
 
 app.post('/addList', (req, res) => {
-  const { patientName, triageLevel, Doctor } = req.body
+  const { patientName, triageLevel} = req.body
   const waitTime = 0
-  if (!patientName || !triageLevel || !Doctor) {
+  const formattedWaitTime = formatTime(waitTime)
+  const Doctor = ''
+  if (!patientName || !triageLevel) {
     return res.status(400).send({ message: 'All fields are required.' })
   }
 
-  const newPatient = {id: nextId++,patientName,triageLevel,waitTime,Doctor}
+  const newPatient = {id: nextId++,patientName,triageLevel,waitTime,Doctor,formattedWaitTime}
 
   HospitalInfoList.push(newPatient)
-  io.emit('update', [...HospitalInfoList]);
+  io.emit('update', {
+    list:[...HospitalInfoList],
+    history:[...HospitalHistory]
+  });
   res.status(201).send(newPatient)
 })
 
@@ -88,7 +111,7 @@ app.get('/getListById/:id', (req, res) => {
   res.send(patient)
 })
 
-app.put('/updateListById/:id', (req, res) => {
+app.put('/updateTriageLevelById/:id', (req, res) => {
   const id = parseInt(req.params.id)
   const patientIndex = HospitalInfoList.findIndex((p) => p.id === id)
 
@@ -96,28 +119,36 @@ app.put('/updateListById/:id', (req, res) => {
     return res.status(404).send({ message: 'Patient not found.' })
   }
 
-  const { patientName, triageLevel, Doctor } = req.body
+  const {triageLevel} = req.body
   const updatedPatient = {
     ...HospitalInfoList[patientIndex],
-    patientName: patientName || HospitalInfoList[patientIndex].patientName,
     triageLevel: triageLevel || HospitalInfoList[patientIndex].triageLevel,
-    Doctor: Doctor || HospitalInfoList[patientIndex].Doctor,
   }
 
   HospitalInfoList[patientIndex] = updatedPatient
-  io.emit('update', [...HospitalInfoList]);
+  io.emit('update', {
+    list:[...HospitalInfoList],
+    history:[...HospitalHistory]
+  });
   res.send(updatedPatient)
 })
 
-app.delete('/deleteListById/:id', (req, res) => {
+app.delete('/admitPatient/:id', (req, res) => {
   const id = parseInt(req.params.id)
-  const initialLength = HospitalInfoList.length
-  HospitalInfoList = HospitalInfoList.filter((p) => p.id !== id)
-
-  if (HospitalInfoList.length === initialLength) {
-    return res.status(404).send({ message: 'Patient not found.' })
+  const {enteredDoctor} = req.body
+  const patientIndex = HospitalInfoList.findIndex((p) => p.id === id)
+  if (patientIndex === -1) {
+    return res.status(404).send({ message: 'Patient not found.' });
   }
-  io.emit('update', [...HospitalInfoList]);
+  admittedPatient = HospitalInfoList[patientIndex]
+  admittedPatient.Doctor = enteredDoctor
+  const newAdmittedPatient = { HistoryId: historyId++,...admittedPatient }
+  HospitalHistory.push(newAdmittedPatient)
+  HospitalInfoList.splice(patientIndex, 1);
+  io.emit('update', {
+    list:[...HospitalInfoList],
+    history:[...HospitalHistory]
+  });
   res.send({ message: 'Patient deleted.' })
 })
 
