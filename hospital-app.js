@@ -7,7 +7,7 @@ const { Server } = require('socket.io');
 const port = 8080
 
 app.use(cors({
-  origin: ['http://localhost:8080','https://clever-preferably-bird.ngrok-free.app','https://hospital-app-alpha.vercel.app'],
+  origin: ['http://localhost:3000','http://localhost:8080','https://clever-preferably-bird.ngrok-free.app','https://patient-tracking-system.vercel.app'],
   methods: ['GET', 'POST', 'DELETE','PUT'],
 }));
 
@@ -20,7 +20,7 @@ const server = http.createServer(app);
 // Attach Socket.IO to the HTTP server
 const io = new Server(server, {
   cors: {
-    origin: ['http://localhost:8080','https://clever-preferably-bird.ngrok-free.app','https://hospital-app-alpha.vercel.app'],
+    origin: ['http://localhost:3000','http://localhost:8080','https://clever-preferably-bird.ngrok-free.app','https://patient-tracking-system.vercel.app'],
     methods: ['GET', 'POST', 'DELETE','PUT'],
   },
 });
@@ -189,7 +189,7 @@ app.get('/downloadhistory', (req, res) => {
     doc.text('Injury Type', 230, yPosition);
     doc.text('Triage Level', 350, yPosition);
     doc.text('Wait Time', 430, yPosition);
-    doc.text('Doctor', 500, yPosition);
+    doc.text('Doctor', 480, yPosition);
     
     yPosition += 20;
     doc.moveTo(50, yPosition).lineTo(550, yPosition).stroke();
@@ -208,7 +208,7 @@ app.get('/downloadhistory', (req, res) => {
       doc.text(patient.injuryType || 'N/A', 230, yPosition);
       doc.text(patient.triageLevel.toString(), 350, yPosition);
       doc.text(patient.formattedWaitTime, 430, yPosition);
-      doc.text(patient.Doctor || 'N/A', 500, yPosition);
+      doc.text(patient.Doctor || 'N/A', 480, yPosition);
       
       yPosition += 20;
       
@@ -243,7 +243,7 @@ app.delete('/admitPatient/:id', (req, res) => {
     return res.status(404).send({ message: 'Patient not found.' });
   }
   admittedPatient = HospitalInfoList[patientIndex]
-  admittedPatient.Doctor = enteredDoctor
+  admittedPatient.Doctor = "Dr."+enteredDoctor 
   const newAdmittedPatient = { HistoryId: historyId++,...admittedPatient }
   HospitalHistory.push(newAdmittedPatient)
   HospitalInfoList.splice(patientIndex, 1);
