@@ -12,7 +12,7 @@ This is a simple backend application built with Express.js for managing hospital
 
 1. Clone the repository:
     ```
-    git clone https://github.com/your-username/Hospital-app-backend.git
+    git clone https://github.com/codingishard444/Hospital-app-backend.git
     ```
 2. Navigate to the project directory:
     ```
@@ -29,14 +29,7 @@ This is a simple backend application built with Express.js for managing hospital
     ```
     npm start
     ```
-2. The server will run on `http://localhost:3000` by default.
-
-## Endpoints
-
-- `GET /patients` - Get a list of all patients.
-- `POST /patients` - Add a new patient.
-- `GET /doctors` - Get a list of all doctors.
-- `POST /appointments` - Schedule a new appointment.
+2. The server will run on `http://localhost:8080` by default.
 
 ## Technologies Used
 
